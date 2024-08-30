@@ -65,7 +65,7 @@ export default function Home() {
 
   return (
     <div>
-      <h1>Welcome to my Next.js app!</h1>
+      <h1>Charlie</h1>
       {dogImage && <img src={dogImage} alt="Random dog" style={{maxWidth: '500px'}} />}
     </div>
   );
