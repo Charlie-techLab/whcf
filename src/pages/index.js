@@ -1,72 +1,73 @@
-import { useState, useEffect } from 'react';
-import fetch from 'isomorphic-unfetch';
+import Link from "next/link";
+import dbConnect from "../lib/dbConnect";
+import Pet from "../models/Pet";
 
-// These are mock functions to prevent errors
-const core = {
-  getInput: () => 'mock-token',
-  setFailed: console.error
-};
-const github = {
-  getOctokit: () => ({
-    rest: {
-      issues: {
-        create: async () => ({ data: { html_url: 'https://github.com/mock-issue' } }),
-        createComment: async () => {}
-      }
-    }
-  }),
-  context: {
-    payload: { pull_request: { title: 'Mock PR', body: 'Mock body', number: 1 } },
-    repo: { owner: 'mock-owner', repo: 'mock-repo' }
-  }
-};
+// TODO: Import Hours component
 
-async function run() {
-  try {
-    // get GitHub token
-    const token = core.getInput("repo-token", { required: true });
-    const octokit = github.getOctokit(token);
-    const { context } = github;
-
-    // get the current pr
-    const pr = context.payload.pull_request;
-    console.log(pr.title);
-    
-    // create an issue for pr
-    console.log("Creating issue for PR");
-    const issue = await octokit.rest.issues.create({
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      title: pr.title,
-      body: pr.body,
-    });
-    // add comment to PR
-    console.log("Adding comment to PR");
-    await octokit.rest.issues.createComment({
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      issue_number: pr.number,
-      body: `Issue created: ${issue.data.html_url}`,
-    });
-  } catch (error) {
-    core.setFailed(error.message);
-  }
-}
-
-export default function Home() {
-  const [dogImage, setDogImage] = useState('');
-
-  useEffect(() => {
-    run();
-    fetch('https://dog.ceo/api/breeds/image/random')
-      .then(res => res.json())
-      .then(data => setDogImage(data.message));
-  }, []);
+const Index = ({ pets }) => {
 
   return (
-    <div>
-      <h1>Charlie</h1>
-      {dogImage && <img src={dogImage} alt="Random dog" style={{maxWidth: '500px'}} />}
-    </div>
+    <>
+
+      {/* TODO: Display Hours component */}
+
+      {/* Create a card for each pet */}
+      {pets.map((pet) => (
+        <div key={pet._id}>
+          <div className="card">
+            <img src={pet.image_url} />
+            <h5 className="pet-name">{pet.name}</h5>
+            <div className="main-content">
+              <p className="pet-name">{pet.name}</p>
+              <p className="owner">Owner: {pet.owner_name}</p>
+
+              {/* Extra Pet Info: Likes and Dislikes */}
+              <div className="likes info">
+                <p className="label">Likes</p>
+                <ul>
+                  {pet.likes.map((data, index) => (
+                    <li key={index}>{data} </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="dislikes info">
+                <p className="label">Dislikes</p>
+                <ul>
+                  {pet.dislikes.map((data, index) => (
+                    <li key={index}>{data} </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="btn-container">
+                <Link href="/[id]/edit" as={`/${pet._id}/edit`}>
+                  <button className="btn edit">Edit</button>
+                </Link>
+                <Link href="/[id]" as={`/${pet._id}`}>
+                  <button className="btn view">View</button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </>
   );
+};
+
+/* Retrieves pet(s) data from mongodb database */
+export async function getServerSideProps() {
+  await dbConnect();
+
+  /* find all the data in our database */
+  const result = await Pet.find({});
+  const pets = result.map((doc) => {
+    const pet = doc.toObject();
+    pet._id = pet._id.toString();
+    return pet;
+  });
+
+  return { props: { pets: pets } };
 }
+
+export default Index;

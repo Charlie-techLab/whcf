@@ -1,32 +1,70 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
-    const Hours = () => {
-        // add logic
+const Hours = () => {
+  const [currentTime, setCurrentTime] = useState('');
+  const [currentDate, setCurrentDate] = useState('');
+  const [today, setToday] = useState('');
+  const [isClient, setIsClient] = useState(false);
 
-        const shelterHours = [
-            { day: "Monday", open: "10:00", close: "16:00" },
-            { day: "Tuesday", open: "10:00", close: "16:00" },
-            { day: "Wednesday", open: "10:00", close: "16:00" },
-            { day: "Thursday", open: "10:00", close: "16:00" },
-            { day: "Friday", open: "10:00", close: "16:00" },
-            { day: "Saturday", open: "9:00", close: "20:00" },
-            { day: "Sunday", open: "9:00", close: "20:00" },
-    
-        ]
+  const shelterHours = [
+    { day: "Monday", open: "10:00 AM", close: "4:00 PM" },
+    { day: "Tuesday", open: "10:00 AM", close: "4:00 PM" },
+    { day: "Wednesday", open: "10:00 AM", close: "4:00 PM" },
+    { day: "Thursday", open: "10:00 AM", close: "4:00 PM" },
+    { day: "Friday", open: "10:00 AM", close: "4:00 PM" },
+    { day: "Saturday", open: "9:00 AM", close: "8:00 PM" },
+    { day: "Sunday", open: "9:00 AM", close: "8:00 PM" },
+  ];
 
-        // get the long day name and store it in a variable called today
-        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  useEffect(() => {
+    setIsClient(true);
+    const updateDateTime = () => {
+      const now = new Date();
+      setToday(now.toLocaleDateString('en-US', { weekday: 'long' }));
+      setCurrentTime(now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      }));
+      setCurrentDate(now.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }));
+    };
 
-        // get today's hours
-        const todayHours = shelterHours.find((day) => day.day === today);
+    updateDateTime();
+    const intervalId = setInterval(updateDateTime, 1000);
 
-        // display today and the hours in an div with an id of hours
-        return (
-            <div id="hours">
-                <h2>Today's Hours</h2>
-                <p>{todayHours.day} {todayHours.open} - {todayHours.close}</p>
-            </div>
-        )
-    }
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const todayHours = shelterHours.find((day) => day.day === today);
+
+  return (
+    <div id="hours" style={{
+      backgroundColor: '#f8f9fa',
+      padding: '20px',
+      borderRadius: '8px',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+    }}>
+      <h2 style={{ color: '#2c3e50', marginBottom: '15px' }}>Today's Shelter Hours</h2>
+      
+      {isClient && todayHours && (
+        <>
+          <p style={{ fontSize: '18px', color: '#34495e' }}>
+            {today}: {todayHours.open} - {todayHours.close}
+          </p>
+          <p style={{ fontSize: '16px', color: '#7f8c8d', marginTop: '15px' }}>
+            Current Time: {currentTime}
+          </p>
+          <p style={{ fontSize: '16px', color: '#7f8c8d' }}>
+            Today's Date: {currentDate}
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
 
 export default Hours;
